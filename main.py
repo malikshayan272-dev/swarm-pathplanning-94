@@ -11,15 +11,12 @@ GRID_SIZE = 20
 OBSTACLE_PERCENTAGE = 0.20
 
 all_cells = [(x, y) for x in range(GRID_SIZE) for y in range(GRID_SIZE)]
-
 num_obstacles = int(GRID_SIZE * GRID_SIZE * OBSTACLE_PERCENTAGE)
-
 obstacles = set(random.sample(all_cells, num_obstacles))
 
 free_cells = [cell for cell in all_cells if cell not in obstacles]
 
 start = random.choice(free_cells)
-
 goal = random.choice(free_cells)
 
 while goal == start:
@@ -32,7 +29,6 @@ MAX_ITERATIONS = 300
 INERTIA_WEIGHT = 0.7
 COGNITIVE_COEFFICIENT = 1.5
 SOCIAL_COEFFICIENT = 1.5
-
 VELOCITY_LIMIT = 2.0
 
 
@@ -60,7 +56,6 @@ def is_collision(point):
 def path_cost(path):
     total_distance = 0
     collision_penalty = 0
-
     previous = start
 
     for point in path:
@@ -108,12 +103,20 @@ def smooth_path(path):
     return cleaned
 
 
+def count_collisions(path):
+    collisions = 0
+
+    for point in path:
+        if is_collision(point):
+            collisions += 1
+
+    return collisions
+
+
 particles = []
 
 for _ in range(NUM_PARTICLES):
-
     position, velocity = create_particle()
-
     cost = path_cost(position)
 
     particle = {
@@ -178,20 +181,12 @@ for iteration in range(MAX_ITERATIONS):
         current_cost = path_cost(particle["position"])
 
         if current_cost < particle["best_cost"]:
-
             particle["best_cost"] = current_cost
-
-            particle["best_position"] = (
-                particle["position"].copy()
-            )
+            particle["best_position"] = particle["position"].copy()
 
         if current_cost < global_best_cost:
-
             global_best_cost = current_cost
-
-            global_best_position = (
-                particle["position"].copy()
-            )
+            global_best_position = particle["position"].copy()
 
     cost_history.append(global_best_cost)
 
@@ -207,20 +202,21 @@ best_waypoints = smooth_path(best_waypoints)
 
 final_path = [start] + best_waypoints + [goal]
 
+collision_count = count_collisions(final_path)
+
 final_length = 0
 
 for i in range(len(final_path) - 1):
-
     final_length += distance(
         final_path[i],
         final_path[i + 1]
     )
 
+
 print("=" * 60)
 print("SWARM INTELLIGENCE LAB - ASSIGNMENT 1")
 print("PSO-Based Path Planning with Obstacles")
 print("=" * 60)
-
 print(f"Random Seed / Roll Number : {SEED}")
 print(f"Grid Size                 : {GRID_SIZE} x {GRID_SIZE}")
 print(f"Number of Obstacles       : {len(obstacles)}")
@@ -230,7 +226,7 @@ print(f"Number of Particles       : {NUM_PARTICLES}")
 print(f"Maximum Iterations        : {MAX_ITERATIONS}")
 print(f"Final Path Length         : {final_length:.2f}")
 print(f"Final PSO Cost            : {global_best_cost:.2f}")
-
+print(f"Path Collision Points     : {collision_count}")
 print("\nBest Path:")
 
 for i, point in enumerate(final_path):
@@ -238,10 +234,10 @@ for i, point in enumerate(final_path):
 
 print("=" * 60)
 
+
 fig, ax = plt.subplots(figsize=(9, 9))
 
 for obstacle in obstacles:
-
     x, y = obstacle
 
     rectangle = plt.Rectangle(
@@ -252,6 +248,7 @@ for obstacle in obstacles:
     )
 
     ax.add_patch(rectangle)
+
 
 path_x = [point[0] for point in final_path]
 path_y = [point[1] for point in final_path]
@@ -322,6 +319,7 @@ plt.savefig(
 
 plt.show()
 
+
 plt.figure(figsize=(9, 5))
 
 plt.plot(
@@ -331,9 +329,7 @@ plt.plot(
 )
 
 plt.title("PSO Convergence")
-
 plt.xlabel("Iteration")
-
 plt.ylabel("Best Cost")
 
 plt.grid(
